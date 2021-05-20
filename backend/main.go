@@ -14,6 +14,7 @@ import (
 	"github.com/gofiber/fiber"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/gofiber/cors"
     // "go.mongodb.org/mongo-driver/mongo"
     // "go.mongodb.org/mongo-driver/mongo/gridfs"
     // "go.mongodb.org/mongo-driver/mongo/options"
@@ -42,6 +43,19 @@ func createUser(c *fiber.Ctx) {
 
 	response, _ := json.Marshal(res)
 	c.Send(response)
+	// c.Send(responseUser)
+	// var r map[string]interface{}
+	// responseUser, _ := json.Marshal(user)
+	// q  := json.Unmarshal(responseUser, &r)
+	// if q != nil {
+	// 	c.Status(500).Send(err)
+	// 	return
+	// }
+	// response, _ := json.Marshal(res)
+	// r["_id"] = string(response)
+	// newData, err := json.Marshal(r)
+	// fmt.Printf(string(response))
+	// c.Send(newData)
 }
 
 func getUser(c *fiber.Ctx) {
@@ -126,6 +140,7 @@ func deleteUser(c *fiber.Ctx) {
 
 func main() {
 	app := fiber.New()
+	app.Use(cors.New())
 	app.Get("/user/:id?", getUser)
 	app.Post("/user", createUser)
 	app.Put("/user/:id", updateUser)
