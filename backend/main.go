@@ -4,20 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	// "fmt"
-	// "bytes"
-    // "io/ioutil"
-    // "log"
-    // "os"
-    // "path"
-    // "time"
-
 	"github.com/gofiber/fiber"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"github.com/gofiber/cors"
-    // "go.mongodb.org/mongo-driver/mongo"
-    // "go.mongodb.org/mongo-driver/mongo/gridfs"
-    // "go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const dbName = "usersdb"
@@ -43,19 +33,6 @@ func createUser(c *fiber.Ctx) {
 
 	response, _ := json.Marshal(res)
 	c.Send(response)
-	// c.Send(responseUser)
-	// var r map[string]interface{}
-	// responseUser, _ := json.Marshal(user)
-	// q  := json.Unmarshal(responseUser, &r)
-	// if q != nil {
-	// 	c.Status(500).Send(err)
-	// 	return
-	// }
-	// response, _ := json.Marshal(res)
-	// r["_id"] = string(response)
-	// newData, err := json.Marshal(r)
-	// fmt.Printf(string(response))
-	// c.Send(newData)
 }
 
 func getUser(c *fiber.Ctx) {
@@ -86,6 +63,39 @@ func getUser(c *fiber.Ctx) {
 
 	if results == nil {
 		c.SendStatus(404)
+		return
+	}
+
+	json, _ := json.Marshal(results)
+	c.Send(json)
+}
+
+func login(c *fiber.Ctx) {
+	collection, err := getMongoDbCollection(dbName, collectionName)
+	if err != nil {
+		c.Status(500).Send(err)
+		return
+	}
+	
+	var filter bson.M = bson.M{}
+	var user User
+	json.Unmarshal([]byte(c.Body()), &user)
+	
+	filter = bson.M{"email": user.Email}
+
+	var results []bson.M
+	cur, err := collection.Find(context.Background(), filter)
+	defer cur.Close(context.Background())
+
+	if err != nil {
+		c.Status(500).Send(err)
+		return
+	}
+
+	cur.All(context.Background(), &results)
+
+	if results == nil {
+		c.Send("Incorrect Email")
 		return
 	}
 
@@ -142,6 +152,7 @@ func main() {
 	app := fiber.New()
 	app.Use(cors.New())
 	app.Get("/user/:id?", getUser)
+	app.Post("/user/login", login)
 	app.Post("/user", createUser)
 	app.Put("/user/:id", updateUser)
 	app.Delete("/user/:id", deleteUser)
