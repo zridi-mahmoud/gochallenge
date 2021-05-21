@@ -11,8 +11,9 @@ import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/core/styles";
 import Container from "@material-ui/core/Container";
 import axios from "axios";
-import auth from "../helpers/auth";
 import { useHistory } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function Copyright() {
   return (
@@ -59,23 +60,35 @@ export default function SignUp() {
   const [redirct, setRedirect] = useState(false);
   const [avatar, setAvatar] = useState("");
   const [user, setUser] = useState({
-    id: "",
     name: "",
     email: "",
-    password: "",
     avatar: avatar,
   });
 
   function getBase64(file) {
-    var reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = function () {
-      setAvatar(reader.result);
-      console.log(reader.result);
-    };
-    reader.onerror = function (error) {
-      console.log("Error: ", error);
-    };
+    if (file) {
+      if (file.size <= 2097152) {
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+          setAvatar(reader.result);
+          setUser({ ...user, avatar: reader.result });
+        };
+        reader.onerror = function (error) {
+          console.log("Error: ", error);
+        };
+      }
+    } else {
+      toast.error("Avatar size should be less than 2 Mb.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
   }
 
   const submit = (e) => {
@@ -86,7 +99,6 @@ export default function SignUp() {
       data: {
         name: user.name,
         email: user.email,
-        password: user.password,
         avatar: avatar,
       },
     };
@@ -94,8 +106,15 @@ export default function SignUp() {
     axios(config)
       .then((response) => {
         if (response.data.InsertedID) {
-          setUser({ ...user, id: response.data.InsertedID });
-          localStorage.setItem("user", JSON.stringify(user));
+          localStorage.setItem("id", response.data.InsertedID);
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              name: user.name,
+              email: user.email,
+              avatar: user.avatar,
+            })
+          );
           setRedirect(true);
         } else {
           console.log("no acces Token");
@@ -106,9 +125,7 @@ export default function SignUp() {
       });
   };
   if (redirct) {
-    auth.login(() => {
-      history.push("/home");
-    });
+    history.push("/home");
   }
 
   return (
@@ -150,24 +167,8 @@ export default function SignUp() {
                 autoComplete="email"
               />
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                variant="outlined"
-                required
-                fullWidth
-                name="user[password]"
-                value={user.password}
-                onChange={(e) => setUser({ ...user, password: e.target.value })}
-                label="Password"
-                type="password"
-                id="password"
-                autoComplete="current-password"
-              />
-            </Grid>
             <Grid item xs={3} sm={2}>
-              <Avatar src={avatar}>
-                {/* <img src={avatar} alt={avatar} /> */}
-              </Avatar>
+              <Avatar src={avatar}></Avatar>
             </Grid>
             <Grid item xs={3} sm={2}>
               <input
@@ -190,9 +191,9 @@ export default function SignUp() {
           </Button>
           <Grid container justify="flex-end">
             <Grid item>
-              {/* <Link href="/" variant="body2">
+              <Link href="/" variant="body2">
                 Already have an account? Sign in
-              </Link> */}
+              </Link>
             </Grid>
           </Grid>
         </form>
@@ -200,6 +201,7 @@ export default function SignUp() {
       <Box mt={5}>
         <Copyright />
       </Box>
+      <ToastContainer />
     </Container>
   );
 }
