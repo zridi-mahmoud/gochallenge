@@ -7,6 +7,7 @@
 Open backend directory and run:
 
 ```
+go mod download
 go run .
 ```
 
@@ -15,5 +16,6 @@ go run .
 Open frontend directory and run:
 
 ```
+npm install
 npm start
 ```
