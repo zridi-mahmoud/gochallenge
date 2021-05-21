@@ -99,7 +99,6 @@ const Home = () => {
   };
   const handleSave = () => {
     if (localStorage.getItem("id") !== 0) {
-      // setUser({ ...user, avatar: tmpAvatar });
       setUser(tmpUser);
       setOpen(false);
       var config = {
@@ -114,6 +113,7 @@ const Home = () => {
 
       axios(config)
         .then((response) => {
+        setUser({ ...tmpUser, avatar: tmpAvatar });
           if (!online) {
             toast.success("Connected successfully", {
               position: "top-right",
